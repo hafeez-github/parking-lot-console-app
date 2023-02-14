@@ -12,10 +12,12 @@
     <None Remove="Services\" />
     <None Remove="Helper\" />
     <None Remove="StyleCop.Analyzers" />
+    <None Remove="Data\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Models\" />
     <Folder Include="Services\" />
     <Folder Include="Helper\" />
+    <Folder Include="Data\" />
   </ItemGroup>
 </Project>

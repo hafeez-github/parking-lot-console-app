@@ -7,26 +7,26 @@ namespace UserConsole
     {
         static void Main(string[] args)
         {
-            Transaction transaction = new Transaction(new Data());
-
+            Operation operation = new Operation(new Data());
             Console.WriteLine("Welcome to your beloved Parking Lot");
-            transaction.InitialiseParking();
+            operation.InitialiseParking(OperationHelper.CollectSlotInputs());
 
             while (true) {
 
-                int userResponse = Helper.DisplayMenu();
+                int userResponse = OperationHelper.CollectMenuInput();
 
                 switch (userResponse) {
                     case 1:
-                        transaction.Park();
+                        
+                        operation.Park();
                         break;
 
                     case 2:
-                        transaction.Unpark();
+                        operation.Unpark();
                         break;
 
                     case 3:
-                        transaction.GetParkingLotStatus();
+                        operation.GetParkingLotStatus();
                         break;
 
                     case 4:
