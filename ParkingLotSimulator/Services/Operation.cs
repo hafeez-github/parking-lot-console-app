@@ -48,7 +48,7 @@ namespace ParkingLotSimulator
                     break;
 
                 default:
-                    Console.WriteLine("Vehicle type matched.");
+                    Console.WriteLine("Incorrect Vehicle Type");
                     break;
             }
         }
@@ -78,7 +78,7 @@ namespace ParkingLotSimulator
                     break;
 
                 default:
-                    Console.WriteLine("No case matched.");
+                    Console.WriteLine("Incorrect Ticket");
                     break;
             }
             

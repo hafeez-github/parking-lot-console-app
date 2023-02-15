@@ -63,7 +63,6 @@ namespace UserConsole
                     case 6:
                         Environment.Exit(0);
                         break;
-
                 }
             }
 
