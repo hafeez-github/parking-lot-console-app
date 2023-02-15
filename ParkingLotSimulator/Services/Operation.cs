@@ -9,7 +9,10 @@ namespace ParkingLotSimulator
     {
         private readonly Data Data;
 
-        public Operation() { }
+        public Operation()
+        {
+
+        }
 
         public Operation(Data data)
         {
@@ -18,118 +21,105 @@ namespace ParkingLotSimulator
 
         public void InitialiseParking(int[] slots)
         {
-            //make inputs generalised
-            this.Data.Total2WheelerSlots = slots[(int)VehicleType.TW];
-            this.Data.Total4WheelerSlots = slots[(int)VehicleType.FW];
-            this.Data.TotalHeavyVehicleSlots = slots[(int)VehicleType.HV];
+            OperationHelper Helper = new OperationHelper(this.Data);
 
+            foreach (VehicleType vehicleType in Enum.GetValues(typeof(VehicleType)))
+                this.Data.SlotData.Add(vehicleType, slots[(int)vehicleType]);
 
-            List<Slot> l1,l2,l3;
-            l1 = new List<Slot>();
-            l2 = new List<Slot>();
-            l3 = new List<Slot>();
-
-            for (int i=0; i< this.Data.Total2WheelerSlots; i++) {
-                l1.Add(new Slot(VehicleType.TW, i + 1));
-            }
-
-            for (int i = 0; i < this.Data.Total4WheelerSlots; i++)
-            {
-                l2.Add(new Slot(VehicleType.FW, i + 1));
-            }
-
-            for (int i = 0; i < this.Data.TotalHeavyVehicleSlots; i++)
-            {
-                l3.Add(new Slot(VehicleType.HV, i + 1));
-            }
-
-            this.Data.ParkingLot.Add(VehicleType.TW, l1);
-            this.Data.ParkingLot.Add(VehicleType.FW, l2);
-            this.Data.ParkingLot.Add(VehicleType.HV, l3);
+            foreach (KeyValuePair<VehicleType,int> entry in Data.SlotData)
+                Helper.InstantiateSlots(entry.Key, entry.Value);
         }
 
-        public void Park()
+        public void Park(Slot slot)
         {
+            slot.IsAvailable = false;
+            switch (slot.SlotType)
             {
-                OperationHelper Helper = new OperationHelper(this.Data);
-                int vehicleType = Helper.GetVehicleType();
-                Slot slot;
-                // use dictionary user input -> vehicle
-                switch (vehicleType)
-                {
-                    case 1:
-                        slot=this.Data.ParkingLot[VehicleType.TW].Find(slot=>slot.IsAvailable==true);
+                case VehicleType.TwoWheeler:
+                    Data.Occupied2WheelerSlots++;
+                    break;
 
-                        if ( slot==null)
-                        {
-                            Console.WriteLine("Sorry! There are no 2 wheeler parking slots available at the moment.");
-                        }
-                        else
-                        {
-                            slot.IsAvailable = false;
-                            this.Data.Occupied2WheelerSlots++;
-                            Helper.GenerateTicket(slot);
-                        }
+                case VehicleType.FourWheeler:
+                    Data.Occupied4WheelerSlots++;
+                    break;
 
-                        break;
+                case VehicleType.HeavyVehicle:
+                    Data.OccupiedHeavyVehicleSlots++;
+                    break;
 
-                    case 2:
-                        slot = this.Data.ParkingLot[VehicleType.FW].Find(slot => slot.IsAvailable == true);
-
-                        if (slot == null)
-                        {
-                            Console.WriteLine("Sorry! There are no 4 wheeler parking slots available at the moment.");
-                        }
-                        else
-                        {
-                            slot.IsAvailable = false;
-                            this.Data.Occupied4WheelerSlots++;
-                            Helper.GenerateTicket(slot);
-                        }
-
-                        break;
-
-                    case 3:
-                        slot = this.Data.ParkingLot[VehicleType.HV].Find(slot => slot.IsAvailable == true);
-
-                        if (this.Data.OccupiedHeavyVehicleSlots == this.Data.TotalHeavyVehicleSlots)
-                        {
-                            Console.WriteLine("Sorry! There are no heavy vehicle parking slots available at the moment.");
-                        }
-                        else
-                        {
-                            slot.IsAvailable = false;
-                            this.Data.OccupiedHeavyVehicleSlots++;
-                            Helper.GenerateTicket(slot);
-                        }
-
-                        break;
-
-                    case 4:
-                        Environment.Exit(0);
-                        break;
-                }
+                default:
+                    Console.WriteLine("Vehicle type matched.");
+                    break;
             }
         }
 
-        public void Unpark()
+        public void Unpark(Ticket ticket)
         {
-            {
-                OperationHelper Helper = new OperationHelper(this.Data);
+            int slotNumber = ticket.SlotNumber;
+            Slot slot = this.Data.ParkingLot[ticket.VehicleType].Find(slot => slot.SlotNumber == slotNumber);
+            slot.IsAvailable = false;
 
-                Console.WriteLine("Enter the allotted Ticket Number:");
-                string ticketNumber = Console.ReadLine();
-                Ticket ticket = Helper.FetchVehicle(ticketNumber);
-                
+            ticket.OutTime = DateTime.Now.ToString("hh:mm:ss tt");
+            this.Data.HistoricalTickets.Add(ticket);
+            this.Data.CurrentTickets.Remove(ticket);
+
+            switch (ticket.VehicleType)
+            {
+                case VehicleType.TwoWheeler:
+                    Data.Occupied2WheelerSlots--;
+                    break;
+
+                case VehicleType.FourWheeler:
+                    Data.Occupied4WheelerSlots--;
+                    break;
+
+                case VehicleType.HeavyVehicle:
+                    Data.OccupiedHeavyVehicleSlots--;
+                    break;
+
+                default:
+                    Console.WriteLine("No case matched.");
+                    break;
             }
+            
         }
 
         public void GetParkingLotStatus()
         {
             Console.WriteLine("\t\t Availabale Slots\t Occupied Slots\t\t Total Slots");
-            Console.WriteLine("2 Wheelers:   \t\t" + (this.Data.Total2WheelerSlots - this.Data.Occupied2WheelerSlots) + "\t\t\t" + this.Data.Occupied2WheelerSlots + "\t\t\t" + this.Data.Total2WheelerSlots);
-            Console.WriteLine("4 Wheelers:   \t\t" + (this.Data.Total4WheelerSlots - this.Data.Occupied4WheelerSlots) + "\t\t\t" + this.Data.Occupied4WheelerSlots + "\t\t\t" + this.Data.Total4WheelerSlots);
-            Console.WriteLine("Heavy Vehicle:\t\t" + (this.Data.TotalHeavyVehicleSlots - this.Data.OccupiedHeavyVehicleSlots) + "\t\t\t" + this.Data.OccupiedHeavyVehicleSlots + "\t\t\t" + this.Data.TotalHeavyVehicleSlots + "\n");
+            Console.WriteLine("2 Wheelers:   \t\t" + (this.Data.SlotData[VehicleType.TwoWheeler] - this.Data.Occupied2WheelerSlots) + "\t\t\t" + this.Data.Occupied2WheelerSlots + "\t\t\t" + this.Data.SlotData[VehicleType.TwoWheeler]);
+            Console.WriteLine("4 Wheelers:   \t\t" + (this.Data.SlotData[VehicleType.FourWheeler] - this.Data.Occupied4WheelerSlots) + "\t\t\t" + this.Data.Occupied4WheelerSlots + "\t\t\t" + this.Data.SlotData[VehicleType.FourWheeler]);
+            Console.WriteLine("Heavy Vehicle:\t\t" + (this.Data.SlotData[VehicleType.HeavyVehicle] - this.Data.OccupiedHeavyVehicleSlots) + "\t\t\t" + this.Data.OccupiedHeavyVehicleSlots + "\t\t\t" + this.Data.SlotData[VehicleType.HeavyVehicle] + "\n");
+        }
+
+        public void FetchCurrentTicketList()
+        {
+            if (this.Data.CurrentTickets.Count == 0)
+                Console.WriteLine("\nThere are no current tickets");
+            else
+            {
+                Console.WriteLine("\nCurrent Tickets' Count: " + this.Data.CurrentTickets.Count);
+                foreach (Ticket ticket in this.Data.CurrentTickets)
+                {
+                    Console.WriteLine($"{ticket.TicketNumber}  \t{ticket.VehicleType}\t{ticket.VehicleNumber}\t{ticket.SlotNumber}\t{ticket.InTime}\t{ticket.OutTime}");
+                }
+            }
+                
+        }
+
+        public void FetchTicketHistory()
+        {
+            if (this.Data.HistoricalTickets.Count == 0)
+                Console.WriteLine("\nHistory is empty");
+            else
+            {
+                Console.WriteLine("\nTicket History Count: " + this.Data.HistoricalTickets.Count);
+                foreach (Ticket ticket in this.Data.HistoricalTickets)
+                {
+                    Console.WriteLine($"{ticket.TicketNumber}  \t{ticket.VehicleType}\t{ticket.VehicleNumber}\t{ticket.SlotNumber}\t{ticket.InTime}\t{ticket.OutTime}");
+                }
+            }
+
         }
     }
 }

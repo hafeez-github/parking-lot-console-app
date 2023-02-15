@@ -16,85 +16,20 @@ namespace ParkingLotSimulator
             this.Data = data;
         }
 
-        public static int[] CollectSlotInputs() {
-            int[] slots = new int[3];
-            try
-            {
-                Console.WriteLine("\nEnter no. of 2 wheeler slots: ");
-                slots[(int)VehicleType.TW] = Convert.ToInt32(Console.ReadLine());
 
-                Console.WriteLine("Enter no. of 4 wheeler slots: ");
-                slots[(int)VehicleType.FW] = Convert.ToInt32(Console.ReadLine());
-
-                Console.WriteLine("Enter no. of heavy vehicle slots: ");
-                slots[(int)VehicleType.HV] = Convert.ToInt32(Console.ReadLine());
-            }
-
-            catch
-            {
-                Console.WriteLine("Check and Re-enter your Input");
-                CollectSlotInputs();
-            }
-
-            return slots;
-        }
-
-        public static int CollectMenuInput()
-        {
-            Console.WriteLine("\nPlease opt for a functionality: ");
-            Console.WriteLine("1. Park");
-            Console.WriteLine("2. Unpark");
-            Console.WriteLine("3. Parking Lot Status");
-            Console.WriteLine("4. Exit");
-
-            int userResponse;
-            try
-            {
-                userResponse = Convert.ToInt32(Console.ReadLine());
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Check and Re-Enter your Input");
-                userResponse = Convert.ToInt32(Console.ReadLine());
-            }
-
-            return userResponse;
-        }
-
-        public int GetVehicleType()
-        {
-            Console.WriteLine("\nChoose your vehicle type:");
-            Console.WriteLine("1. 2 Wheeler");
-            Console.WriteLine("2. 4 Wheeler");
-            Console.WriteLine("3. Heavy Vehicle");
-            Console.WriteLine("4. Exit");
-
-            int userResponse;
-            try
-            {
-                userResponse = Convert.ToInt32(Console.ReadLine());
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Check and Re-Enter your Input");
-                userResponse = Convert.ToInt32(Console.ReadLine());
-            }
-
-            return userResponse;
-        }
-
-        public void GenerateTicket(Slot slot)
+        public Ticket GenerateTicket(Slot slot)
         {
             string ticketNumber = GetTicketNumber(slot.SlotType, slot.SlotNumber);
 
             Console.WriteLine("\nEnter vehicle number:");
             string vehicleNumber = Console.ReadLine();
 
-            Ticket ticket = new Ticket(vehicleNumber, ticketNumber, slot.SlotNumber);
+            Ticket ticket = new Ticket(vehicleNumber, ticketNumber, slot.SlotNumber, slot.SlotType);
             this.Data.CurrentTickets.Add(ticket);
+            return ticket;
 
             //Console.WriteLine("Your Ticket Number: " + Ticket.TicketNumber);
-            PrintTicket(ticket);
+            //IOService.PrintTicket(ticket);
             
         }
 
@@ -105,54 +40,70 @@ namespace ParkingLotSimulator
             return ticketNumber;
         }
 
-        public Ticket FetchVehicle(string TicketNumber)
+        public Ticket FetchTicket(string TicketNumber)
         {
-
             Ticket ticket=this.Data.CurrentTickets.Find(ticket=>ticket.TicketNumber==TicketNumber);
-            ticket.OutTime = DateTime.Now.ToString("hh:mm:ss tt");
-            this.Data.HistoricalTickets.Add(ticket);
-            this.Data.CurrentTickets.Remove(ticket);
-            int slotNumber = ticket.SlotNumber;
-            string vehicleType = TicketNumber.Substring(0, 2);
-
-            switch (vehicleType)
-            {
-                case "TW":
-                    Slot TWSlot=this.Data.ParkingLot[VehicleType.TW].Find(slot=>slot.SlotNumber==slotNumber);
-                    TWSlot.IsAvailable = false;
-                    Data.Occupied2WheelerSlots--;
-                    return ticket;
-                    
-                case "FW":
-                    Slot FWSlot = this.Data.ParkingLot[VehicleType.TW].Find(slot => slot.SlotNumber == slotNumber);
-                    FWSlot.IsAvailable = false;
-                    Data.Occupied4WheelerSlots--;
-                    return ticket;
-
-                case "HV":
-                    Slot HVSlot = this.Data.ParkingLot[VehicleType.TW].Find(slot => slot.SlotNumber == slotNumber);
-                    HVSlot.IsAvailable = false;
-                    Data.OccupiedHeavyVehicleSlots--;
-                    return ticket;
-
-                default:
-                    Console.WriteLine("No case matched.");
-                    break;
-            }
-            
             return ticket;
         }
 
-        public void PrintTicket(Ticket ticket)
-        {
-            Console.WriteLine("\n------------Parking-Ticket-----------------");
-            Console.WriteLine("Vehicle Number: " + ticket.VehicleNumber);
-            Console.WriteLine("Your Ticket Number: " + ticket.TicketNumber);
-            Console.WriteLine("InTime: " + ticket.InTime);
-            Console.WriteLine("OutTime: " + ticket.OutTime);
-            Console.WriteLine("Note: Ticket is required to unpark\n      your vehicle. Keep it safe.\n");
-            Console.WriteLine("------------Thankyou-------------------------\n");
+        public void InstantiateSlots(VehicleType vehicleType, int slotCount) {
+
+            List<Slot> l = new List<Slot>();
+
+            for (int i = 0; i < slotCount; i++)
+            {
+                l.Add(new Slot(vehicleType, i + 1));
+            }
+
+            this.Data.ParkingLot.Add(vehicleType, l);
+
         }
-        
+
+        public Slot IsSlotAvailable(VehicleType vehicleType) {
+
+            Slot slot;
+
+            switch (vehicleType)
+            {
+                case VehicleType.TwoWheeler:
+
+                    slot = this.Data.ParkingLot[vehicleType].Find(slot => slot.IsAvailable == true);
+
+                    if (slot == null)
+                    {
+                        return null;
+                    }
+
+                    else
+                    {
+                        return slot;
+                        //    //slot.IsAvailable = false;
+                        //    //this.Data.Occupied2WheelerSlots++;
+                        //    //Helper.GenerateTicket(slot);
+                    }
+
+                    break;
+
+                case VehicleType.FourWheeler:
+                    slot = this.Data.ParkingLot[VehicleType.FourWheeler].Find(slot => slot.IsAvailable == true);
+                    break;
+
+                case VehicleType.HeavyVehicle:
+                    slot = this.Data.ParkingLot[VehicleType.HeavyVehicle].Find(slot => slot.IsAvailable == true);
+                    break;
+
+                default:
+                    slot = new Slot(VehicleType.TwoWheeler, 0);
+                    break;
+            }
+
+            return slot;
+        }
+
+
+
     }
+
+
+        
 }
